@@ -37,14 +37,11 @@ namespace ConsoleApp1
                 XDocument xmldoc = GetXMLFromPart(documentPart);
                 //Console.WriteLine(xmldoc); printed das gesamte XML Dokument aus!
 
-                //Console.WriteLine("Systemarten im Dokument:");
                 IEnumerable<XElement> systemarten = GetXElementsByName(xmldoc, "2");
-                printeListe("Systemarten", systemarten);
-
-                //Console.WriteLine("Ziele im Dokument:");
                 IEnumerable<XElement> ziele = GetXElementsByName(xmldoc, "7");
-                printeListe("Ziele", ziele);
-                //getZiele(ziele);
+                //printeListe("Systemart: ", systemarten);
+                getZiele(ziele);
+                getSystemarten(systemarten);
             }
 
 
@@ -128,14 +125,64 @@ namespace ConsoleApp1
         private static IEnumerable<Ziel> getZiele(IEnumerable<XElement> zielliste)
         {
             List<Ziel> ziele = new List<Ziel>();
-            foreach (XElement x in zielliste)
-            {
-                ziele.Add(new Ziel(x.Element("Text").Value));
-            }
+           
+            IEnumerable<XElement> de =
+                from el in zielliste.Descendants()
+                where el.Name.LocalName == "Text"
+                select el;
+            foreach (XElement el in de)
+                ziele.Add(new Ziel(el.Value));
+
+
 
             Console.WriteLine("Ziele gefunden:");
-            Console.WriteLine(ziele);
+            
+            foreach (Ziel currentziel in ziele)
+            {
+                Console.WriteLine(currentziel.getName());
+            }
+
             return ziele;
+        }
+
+        //Getter für verschiedene Typen in unserem Diagramm:
+        private static IEnumerable<Systemart> getSystemarten(IEnumerable<XElement> systemartliste)
+        {
+            //neue leere Liste
+            List<Systemart> systemarts = new List<Systemart>();
+
+            //laufe die unter-Tags durch und suche nach dem Tag "Text"
+            IEnumerable<XElement> de =
+                from el in systemartliste.Descendants()
+                where el.Name.LocalName == "Text"
+                select el;
+            //für jedes Tag XElement erstelle eine neue Systemart und füge es der Systemartsliste hinzu
+            foreach (XElement el in de)
+            {
+                systemarts.Add(new Systemart(el.Value));
+            }
+
+
+            //Durchlaufe nun wieder die gefundenen Systemart shapes und nehme jeweils die IDs aus ihnen raus uznd füge es der zugehörigen Systemart in der Systemartliste hinzu
+            int counter = 0;
+            foreach (XElement systemartxml in systemartliste)
+            {
+                Console.WriteLine(systemartxml.Attribute("ID").Value);
+                systemarts.ElementAt(counter).setId(systemartxml.Attribute("ID").Value);
+                
+                counter++;
+            }
+
+
+            //Gib alle Systemarten aus:
+            Console.WriteLine("Systemarten gefunden:");
+
+            foreach (Systemart currentziel in systemarts)
+            {
+                Console.WriteLine(currentziel.getName() + " ID: " + currentziel.getId());
+            }
+
+            return systemarts;
         }
 
     }
@@ -159,6 +206,35 @@ namespace ConsoleApp1
         public void setName(string newname)
         {
             this.name = newname;
+        }
+    }
+
+    class Systemart
+    {
+        string name;
+        string id;
+        XElement xElement;
+
+        public Systemart(string name)
+        {
+            this.name = name;
+        }
+
+        public string getName()
+        {
+            return this.name;
+        }
+        public void setName(string newname)
+        {
+            this.name = newname;
+        }
+        public string getId()
+        {
+            return this.id;
+        }
+        public void setId(string newid)
+        {
+            this.id = newid;
         }
     }
 
